@@ -116,9 +116,13 @@ def get_access_token():
 # ----------------------
 # Routes
 # ----------------------
+@app.route('/')
+def home():
+    return "Welcome to GuideMe LMS Backend!"
+
 @app.route('/ping')
 def ping():
-    return jsonify({"message": "Backend running"})
+    return jsonify({"message": "Guideme backend running"})
 
 @app.route('/login', methods=['POST', 'OPTIONS'])
 def login():

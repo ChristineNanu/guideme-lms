@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import {
   Box,
   Flex,
@@ -15,6 +15,13 @@ import {
   SimpleGrid,
   Divider,
   Badge,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  useDisclosure,
 } from "@chakra-ui/react";
 import {
   FaBook,
@@ -30,7 +37,6 @@ import {
 
 function GuidePage() {
   const location = useLocation();
-  const navigate = useNavigate();
   const username = location.state?.username || "Christine";
 
   const [loading, setLoading] = useState(false);
@@ -38,7 +44,7 @@ function GuidePage() {
   const [expandedCourses, setExpandedCourses] = useState({});
   const [notifications, setNotifications] = useState([]);
   const [showAll, setShowAll] = useState(false);
-  const [fetched, setFetched] = useState(false);
+  const [fetched, setFetched] = useState(false); // for courses fetch
 
   // Profile edit states
   const [showProfileEdit, setShowProfileEdit] = useState(false);
@@ -49,6 +55,11 @@ function GuidePage() {
   const [showSecure, setShowSecure] = useState(false);
 
   const coursesRef = useRef();
+
+  // Payment modal state
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [selectedCourseIdx, setSelectedCourseIdx] = useState(null);
+  const [phoneNumber, setPhoneNumber] = useState("");
 
   const fetchCourses = () => {
     if (fetched) return;
@@ -62,6 +73,7 @@ function GuidePage() {
           lessons: ["Lesson 1", "Lesson 2", "Lesson 3"],
           progress: 0,
           color: colorMap[idx % colorMap.length],
+          paid: false,
         }));
         setCourses(fetchedCourses);
 
@@ -119,7 +131,52 @@ function GuidePage() {
 
   const handleCourseContinue = (courseIdx) => {
     const course = courses[courseIdx];
-    navigate("/course-details", { state: { course } }); 
+    if (!course.paid) {
+      setSelectedCourseIdx(courseIdx);
+      onOpen(); // open phone input modal
+    } else {
+      alert(`Continuing course "${course.title}"`);
+    }
+  };
+
+  const handlePayment = async () => {
+    if (!phoneNumber) {
+      alert("Phone number required for payment.");
+      return;
+    }
+
+    const course = courses[selectedCourseIdx];
+    try {
+      setLoading(true);
+      const res = await fetch("http://127.0.0.1:5000/mpesa/stkpush", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: 1, // replace with actual user ID
+          course_id: course.id,
+          phoneNumber,
+          amount: 10,
+        }),
+      });
+
+      const data = await res.json();
+      setLoading(false);
+
+      if (data.ResponseCode === "0" || data.success) {
+        alert(`STK Push initiated! Check your phone to complete payment for "${course.title}"`);
+        const updatedCourses = [...courses];
+        updatedCourses[selectedCourseIdx].paid = true;
+        setCourses(updatedCourses);
+        onClose();
+        setPhoneNumber("");
+      } else {
+        alert(`Payment failed: ${data.errorMessage || "Try again"}`);
+      }
+    } catch (err) {
+      setLoading(false);
+      console.error(err);
+      alert("Error initiating payment. Try again.");
+    }
   };
 
   if (loading) {
@@ -199,6 +256,7 @@ function GuidePage() {
                   <Icon as={FaBook} w={6} h={6} color={`${course.color}.500`} />
                   <Text fontSize="xl" fontWeight="semibold">{course.title}</Text>
                   {course.progress === 100 && <Badge colorScheme="green">Completed</Badge>}
+                  {!course.paid && <Badge colorScheme="red">Pay to Continue</Badge>}
                 </HStack>
                 <Text fontWeight="bold" color={`${course.color}.500`}>
                   {expandedCourses[course.title] ? "▲" : "▼"}
@@ -335,6 +393,26 @@ function GuidePage() {
           Need Help? Contact Support
         </Button>
       </Box>
+
+      {/* Payment Modal */}
+      <Modal isOpen={isOpen} onClose={onClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Enter Phone Number for Payment</ModalHeader>
+          <ModalBody>
+            <Input
+              placeholder="2547XXXXXXXX"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+            />
+          </ModalBody>
+          <ModalFooter>
+            <Button colorScheme="green" mr={3} onClick={handlePayment}>Pay</Button>
+            <Button variant="ghost" onClick={() => { onClose(); setPhoneNumber(""); }}>Cancel</Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
     </VStack>
   );
 }
