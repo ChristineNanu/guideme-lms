@@ -7,7 +7,8 @@ import base64
 
 app = Flask(__name__)
 # Enable CORS globally for development (React at localhost:5173)
-CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}}, supports_credentials=True)
+CORS(app, origins=["https://guideme-lms-rlba-j98ag1z0c-christinenanus-projects.vercel.app"])
+
 app.config['CORS_HEADERS'] = 'Content-Type'
 
 def get_db_connection():
@@ -15,9 +16,7 @@ def get_db_connection():
     conn.row_factory = sqlite3.Row
     return conn
 
-# ----------------------
 # Initialize database
-# ----------------------
 with get_db_connection() as conn:
     conn.execute('''
         CREATE TABLE IF NOT EXISTS users (
@@ -113,9 +112,7 @@ def get_access_token():
     )
     return r.json().get("access_token")
 
-# ----------------------
 # Routes
-# ----------------------
 @app.route('/')
 def home():
     return "Welcome to GuideMe LMS Backend!"
