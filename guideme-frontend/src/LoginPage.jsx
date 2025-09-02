@@ -17,8 +17,11 @@ function LoginPage() {
 
     try {
       const res = await axios.post("http://127.0.0.1:5000/login", { email, password });
+      
       if (res.data.success) {
-        navigate("/guide"); // redirect to GuidePage
+        // Get username from backend response, fallback to "Learner"
+        const username = res.data.username || "Chrissy"; 
+        navigate("/guide", { state: { username } }); // pass username via state
       } else {
         setError("Invalid credentials");
       }

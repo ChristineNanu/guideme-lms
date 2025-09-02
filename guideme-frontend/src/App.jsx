@@ -5,6 +5,7 @@ import HomePage from "./HomePage";
 import LoginPage from "./LoginPage";
 import LandingPage from "./LandingPage";    
 import RegisterPage from "./RegisterPage"; 
+import CourseDetails from "./CourseDetails";
 
 function App() {
   return (
@@ -20,6 +21,8 @@ function App() {
         {/* Main app pages */}
         <Route path="/home" element={<HomePage />} />
         <Route path="/guide" element={<GuidePage />} />
+        <Route path="/course-details" element={<CourseDetails />} />
+
       </Routes>
     </Router>
   );
