@@ -7,7 +7,8 @@ import base64
 
 app = Flask(__name__)
 # Enable CORS globally for development (React at localhost:5173)
-CORS(app, origins=["https://guideme-lms-rlba-j98ag1z0c-christinenanus-projects.vercel.app"])
+#CORS(app, origins=["https://guideme-lms-rlba-j98ag1z0c-christinenanus-projects.vercel.app"])
+CORS(app, origins=["http://localhost:5173", "https://guideme-lms-rlba-j98ag1z0c-christinenanus-projects.vercel.app"])
 
 app.config['CORS_HEADERS'] = 'Content-Type'
 
